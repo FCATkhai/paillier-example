@@ -148,12 +148,18 @@ function modInv(a: bigint, m: bigint) {
 
 function generatePaillier(bits: number) {
   const half = bits / 2;
-
-  const p = generatePrime(Math.floor(half) + 1);
-  const q = generatePrime(Math.floor(half));
-
-  const n = p * q;
-  const n2 = n * n;
+  // Aim for exact bit length of n; retry until n matches desired bits
+  let p: bigint, q: bigint, n: bigint, n2: bigint;
+  while (true) {
+    p = generatePrime(Math.floor(half));
+    q = generatePrime(Math.ceil(half));
+    if (p === q) continue;
+    n = p * q;
+    if (n.toString(2).length === bits) {
+      n2 = n * n;
+      break;
+    }
+  }
 
   const lambda = lcm(p - 1n, q - 1n);
   const g = n + 1n;

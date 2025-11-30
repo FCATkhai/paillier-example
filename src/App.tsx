@@ -7,16 +7,34 @@ import {
   encryptPaillier,
   decryptPaillier,
   homomorphicAddPaillier,
+  serializePrivateKey,
+  serializePublicKey,
+  deserializePrivateKey,
+  deserializePublicKey,
 } from "./hooks/usePaillierKeygen";
 
 function App() {
   const [count, setCount] = useState(0);
 
   const handleGen = async () => {
+    function bitLength(n: bigint): number {
+      if (n === 0n) return 0;
+      n = n < 0n ? -n : n;
+
+      let len = 0;
+      while (n > 0n) {
+        len++;
+        n >>= 1n;
+      }
+      return len;
+    }
+
     console.log("Generating key...");
     const { publicKey, privateKey } = await generatePaillierKey(1024);
     console.log("Public:", publicKey);
     console.log("Private:", privateKey);
+    console.log(publicKey.n.toString(2).length, "bits");
+    console.log(bitLength(publicKey.n), "bits (bitLength)");
 
     const m1 = 123n;
     const m2 = 456n;
@@ -25,11 +43,14 @@ function App() {
     const c1 = await encryptPaillier(publicKey, m1);
     const c2 = await encryptPaillier(publicKey, m2);
     console.log("Ciphertext 1:", c1);
+    console.log("c1 bit length:", c1.toString(2).length);
     console.log("Ciphertext 2:", c2);
+    console.log("c2 bit length:", c2.toString(2).length);
 
     console.log("Performing homomorphic addition...");
     const cSum = await homomorphicAddPaillier(publicKey, c1, c2);
     console.log("Ciphertext Sum:", cSum);
+    console.log("cSum bit length:", cSum.toString(2).length);
 
     console.log("Decrypting sum...");
     const mSum = await decryptPaillier(publicKey, privateKey, cSum);
